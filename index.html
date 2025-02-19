@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uber API Callback Test</title>
+    <meta charset="UTF-8">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+        }
+        #content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .result {
+            padding: 15px;
+            background: #f0f0f0;
+            margin: 10px 0;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <h1>Callback da API Uber</h1>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // Captura os parâmetros da URL
+        const params = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+        // Elemento de output
+        const output = document.getElementById('output');
+
+        // Verifica se recebeu um código de autorização
+        if (params.has('code')) {
+            const authCode = params.get('code');
+            output.innerHTML = `
+                <h2>Autorização recebida com sucesso!</h2>
+                <div class="result">Código de autorização: <strong>${authCode}</strong></div>
+                <p>Você já pode fechar esta janela.</p>
+            `;
+        }
+        // Verifica se recebeu access token (fluxo implícito)
+        else if (hashParams.has('access_token')) {
+            const accessToken = hashParams.get('access_token');
+            output.innerHTML = `
+                <h2>Login realizado com sucesso!</h2>
+                <div class="result">Access Token: <strong>${accessToken}</strong></div>
+                <button onclick="testApi()">Testar API</button>
+                <div id="apiResult"></div>
+            `;
+        }
+        // Se nenhum parâmetro for encontrado
+        else {
+            output.innerHTML = `<p>Nenhum parâmetro de callback recebido.</p>`;
+        }
+
+        // Função para testar a API (substitua com o endpoint desejado)
+        async function testApi() {
+            try {
+                const response = await fetch('https://api.uber.com/v1.2/me', {
+                    headers: {
+                        'Authorization': `Bearer ${hashParams.get('access_token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('apiResult').innerHTML = `
+                    <div class="result">
+                        Resposta da API:<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('apiResult').innerHTML = `
+                    <div class="result" style="color: red;">
+                        Erro: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
